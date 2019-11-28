@@ -25,8 +25,14 @@ const StartGameScreen = props => {
     }
 
     const resetInputHandler = () => {
-        setEnteredValue('');
-        setConfirmed(false);
+        setEnteredValue((prevState,prevProps) => {
+            if(!prevState){
+                setConfirmed(false);
+                return '';
+            }
+            return prevState.enteredValue;
+        });
+        
     }
 
     const confirmInputHandler = () => {
@@ -34,9 +40,12 @@ const StartGameScreen = props => {
         const chosenNumber = parseInt(enteredValue);
         if(isNaN(chosenNumber)|| chosenNumber <=0 || chosenNumber > 99){
             //Alert es otro objeto que se comunica con la API nativa!!
-            Alert.alert('Invalid Number','Choose a number between 1 and 99.', [
-                {text: 'Ok', style: 'destructive', onPress: resetInputHandler}
-            ]);
+            setTimeout(() => {
+                Alert.alert('Invalid Number','Choose a number between 1 and 99.', [
+                    {text: 'Ok', style: 'destructive', onPress: resetInputHandler}
+                ]);
+            }, 50);
+            dismissKeyboard();
             return;
         }
         setSelectedNumber(chosenNumber);
@@ -46,7 +55,7 @@ const StartGameScreen = props => {
     }
 
     const dismissKeyboard = () => {
-        console.log('dismissKeyboard triggered');
+        //console.log('dismissKeyboard triggered');
         Keyboard.dismiss();
     }
 
@@ -57,7 +66,7 @@ const StartGameScreen = props => {
             <Card style={styles.summaryContainer}>
                 <Text>You selected</Text>
                 <NumberContainer>{selectedNumber}</NumberContainer>
-                <Button title="START GAME"  />
+                <Button title="START GAME"  onPress={() => props.onStartGame(selectedNumber)}/>
             </Card>
         );
     }
