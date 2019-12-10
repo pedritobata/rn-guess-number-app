@@ -1,8 +1,11 @@
 import React, { useState , useRef, useEffect} from 'react';
-import { View, Text, StyleSheet , Button, Alert} from 'react-native';
+import { View, Text, StyleSheet , Alert, ScrollView} from 'react-native';
 import NumberContainer from '../components/NumberContainer';
 import Card from '../components/Card';
 import DefaultStyles from '../constants/default-styles';
+import { Ionicons } from '@expo/vector-icons';
+import MainButton from '../components/MainButton';
+import BodyText from '../components/BodyText';
 
 const generateRandomBetween = (min, max, exclude) => {
     min = Math.ceil(min);
@@ -14,12 +17,19 @@ const generateRandomBetween = (min, max, exclude) => {
     return rndNum;
 }
 
+const renderListItem = (item, numOfRound) => {
+    return <View key={item} style={styles.listItem}>
+                <BodyText>#{numOfRound}</BodyText>
+                <BodyText>{item}</BodyText>
+            </View>
+}
+
 const GameScreen = props => {
-    const [currentGuess, setCurrentGuess] = 
-        useState(generateRandomBetween(1,100, props.userChoice));
+    const initialGuess = generateRandomBetween(1,100, props.userChoice);
+    const [currentGuess, setCurrentGuess] = useState(initialGuess);
     const currentHigh = useRef(100);
     const currentLow = useRef(1);
-    const [rounds, setRounds] = useState(0);
+    const [pastGuesses, setPastGuesses] = useState([initialGuess]);
 
     const { onGameOver, userChoice } = props;
 
@@ -28,7 +38,7 @@ const GameScreen = props => {
         console.log('userChoice:',userChoice);
         console.log('rounds:',rounds); */
         if(currentGuess === userChoice){
-            onGameOver(rounds);
+            onGameOver(pastGuesses.length);
         }
     },[currentGuess, onGameOver]);
 
@@ -42,11 +52,13 @@ const GameScreen = props => {
         if(direction === 'lower'){
             currentHigh.current = currentGuess;
         }else {
-            currentLow.current = currentGuess;
+            //sumamos 1 para que generateRandomNumber no tome en cuenta el valor de la ultima adivinada
+            //ya que este generador incluye el limite inferior en su generacion de numeros
+            currentLow.current = currentGuess + 1;
         }
         const newGuess =  generateRandomBetween(currentLow.current, currentHigh.current, currentGuess);
         setCurrentGuess(newGuess);
-        setRounds(prevRounds => prevRounds + 1);
+        setPastGuesses(curPastGuesses => [newGuess, ...curPastGuesses]);
     };
 
    
@@ -56,9 +68,20 @@ const GameScreen = props => {
             <Text style={DefaultStyles.bodyText}>Oponent's number</Text>
             <NumberContainer>{currentGuess}</NumberContainer>
             <Card style={styles.buttonContainer}>
-                <Button title="LOWER" onPress={() => nextGuessHandler('lower')}/>
-                <Button title="GREATER" onPress={() => nextGuessHandler('greater')}/>
+                <MainButton onPress={() => nextGuessHandler('lower')}>
+                    <Ionicons name="md-remove" size={24} color="white"/>
+                </MainButton>
+                <MainButton onPress={() => nextGuessHandler('greater')}>
+                    <Ionicons name="md-add" size={24} color="white"/>
+                </MainButton>
             </Card>
+            <View style={styles.listContainer}>
+            {/* contentContainerStyle es la propiedad que se usa para agregar estilo
+            a un ScrollView o flatList */}
+                <ScrollView contentContainerStyle={styles.list}>
+                    {pastGuesses.map((guess,index) => renderListItem(guess,pastGuesses.length - index))}
+                </ScrollView>
+            </View>
         </View>
     );
 };
@@ -75,7 +98,29 @@ const styles = StyleSheet.create({
         marginTop: 20,
         width: 300,
         maxWidth: '80%'
-    } 
+    } ,
+    listContainer : {
+        flex: 1,//esto es para que el scroll funcione en Android
+        width: "80%"
+    },
+    list: {
+        flexGrow: 1,//esta propiedad es igual a flex pero tiene en cuenta
+        //al scroll cuando llenamos la lista de abajo hacia arriba con flex-end
+        alignItems: "center",
+        justifyContent: "flex-end"
+    },
+    listItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        borderWidth: 1,
+        borderColor: "#ccc",
+        padding: 15,
+        marginVertical: 10,
+        backgroundColor: "white",
+        width: "60%"//esto hace que el item tome el width correcto, pero
+        //como es flex, se moverá hacia la izquierda. Para centrarlo tengo
+        //que modificar el estilo flex del ScrollView
+    }
 });
 
 export default GameScreen;
