@@ -7,7 +7,8 @@ import {
   Button,
   Keyboard,
   TouchableWithoutFeedback,
-  Alert
+  Alert,
+  Dimensions
 } from "react-native";
 import Card from "../components/Card";
 import Color from "../constants/colors";
@@ -131,8 +132,9 @@ const styles = StyleSheet.create({
     fontFamily: "open-sans-bold" //acá uso el font que cargué en App.js!!
   },
   inputContainer: {
-    width: 300,
-    maxWidth: "80%",
+    width: "80%",//width indica el default
+    maxWidth: "95%",//esto indica hasta cuanto maximo puede crecer
+    minWidth: 280,//esto indica hasta cuanto maximo puede achicarse
     alignItems: "center"
   },
   buttonContainer: {
@@ -143,9 +145,15 @@ const styles = StyleSheet.create({
   },
   button: {
     /* width: 85 */
+    //Dimensions es un objeto helper de RN que nos trae informacion sobre
+    //las dimensiones del device. En este caso obtenemos el ancho del window.
+    //la otra opcion es screen , pero window funciona para IOS y Android!!
+    //(screen considera la toolbar de Android en su dimension)
+    width: Dimensions.get('window').width / 3.5
   },
   input: {
-    width: 30
+    //esto sería como una suerte de media query!!
+    width: Dimensions.get('window').width < 350 ? 50 : 30
   },
   summaryContainer: {
     marginTop: 20,

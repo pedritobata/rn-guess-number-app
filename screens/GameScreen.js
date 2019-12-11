@@ -1,5 +1,5 @@
 import React, { useState , useRef, useEffect} from 'react';
-import { View, Text, StyleSheet , Alert, ScrollView} from 'react-native';
+import { View, Text, StyleSheet , Alert, ScrollView, FlatList, Dimensions} from 'react-native';
 import NumberContainer from '../components/NumberContainer';
 import Card from '../components/Card';
 import DefaultStyles from '../constants/default-styles';
@@ -17,10 +17,14 @@ const generateRandomBetween = (min, max, exclude) => {
     return rndNum;
 }
 
-const renderListItem = (item, numOfRound) => {
-    return <View key={item} style={styles.listItem}>
-                <BodyText>#{numOfRound}</BodyText>
-                <BodyText>{item}</BodyText>
+//esta funcion será la que se le pasará al FlatList para renderizar los items de la lista
+//pasaremos la funcion usando bind mas abajo. Recordar que bind agrega argumentos a la funcion original
+//y bypasea los parametros que por defecto se le pasen al final de la lista de argumentos
+//en este caso itemData es el argumento por defecto que requiere FlatList para la funcion
+const renderListItem = (listLength, itemData) => {
+    return <View style={styles.listItem}>
+                <BodyText>#{listLength - itemData.index}</BodyText>
+                <BodyText>{itemData.item}</BodyText>
             </View>
 }
 
@@ -29,7 +33,7 @@ const GameScreen = props => {
     const [currentGuess, setCurrentGuess] = useState(initialGuess);
     const currentHigh = useRef(100);
     const currentLow = useRef(1);
-    const [pastGuesses, setPastGuesses] = useState([initialGuess]);
+    const [pastGuesses, setPastGuesses] = useState([initialGuess.toString()]);
 
     const { onGameOver, userChoice } = props;
 
@@ -58,10 +62,14 @@ const GameScreen = props => {
         }
         const newGuess =  generateRandomBetween(currentLow.current, currentHigh.current, currentGuess);
         setCurrentGuess(newGuess);
-        setPastGuesses(curPastGuesses => [newGuess, ...curPastGuesses]);
+        setPastGuesses(curPastGuesses => [newGuess.toString(), ...curPastGuesses]);
     };
 
-   
+    //usamos Dimensions para determinar qué estilo aplicamos
+   let listContainerStyle = styles.listContainer;
+   if(Dimensions.get('window').width < 350){
+        listContainerStyle = styles.listContainerBig
+   }
 
     return (
         <View style={styles.screen}>
@@ -75,12 +83,18 @@ const GameScreen = props => {
                     <Ionicons name="md-add" size={24} color="white"/>
                 </MainButton>
             </Card>
-            <View style={styles.listContainer}>
+            <View style={listContainerStyle}>
             {/* contentContainerStyle es la propiedad que se usa para agregar estilo
             a un ScrollView o flatList */}
-                <ScrollView contentContainerStyle={styles.list}>
+                {/* <ScrollView contentContainerStyle={styles.list}>
                     {pastGuesses.map((guess,index) => renderListItem(guess,pastGuesses.length - index))}
-                </ScrollView>
+                </ScrollView> */}
+                <FlatList 
+                    keyExtractor={item=>item}
+                    data={pastGuesses}
+                    renderItem={renderListItem.bind(this,pastGuesses.length)}
+                    contentContainerStyle={styles.list}
+                />
             </View>
         </View>
     );
@@ -101,12 +115,16 @@ const styles = StyleSheet.create({
     } ,
     listContainer : {
         flex: 1,//esto es para que el scroll funcione en Android
+        width: "60%"
+    },
+    listContainerBig : {
+        flex: 1,//esto es para que el scroll funcione en Android
         width: "80%"
     },
     list: {
         flexGrow: 1,//esta propiedad es igual a flex pero tiene en cuenta
         //al scroll cuando llenamos la lista de abajo hacia arriba con flex-end
-        alignItems: "center",
+        // alignItems: "center", esto solo funciona para ScrollView
         justifyContent: "flex-end"
     },
     listItem: {
@@ -117,7 +135,7 @@ const styles = StyleSheet.create({
         padding: 15,
         marginVertical: 10,
         backgroundColor: "white",
-        width: "60%"//esto hace que el item tome el width correcto, pero
+        width: "100%"//esto hace que el item tome el width correcto, pero
         //como es flex, se moverá hacia la izquierda. Para centrarlo tengo
         //que modificar el estilo flex del ScrollView
     }
