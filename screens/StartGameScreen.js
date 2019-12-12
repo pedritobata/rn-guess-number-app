@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   ScrollView,
@@ -8,7 +8,8 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   Alert,
-  Dimensions
+  Dimensions,
+  KeyboardAvoidingView 
 } from "react-native";
 import Card from "../components/Card";
 import Color from "../constants/colors";
@@ -21,6 +22,19 @@ const StartGameScreen = props => {
   const [enteredValue, setEnteredValue] = useState("");
   const [confirmed, setConfirmed] = useState(false);
   const [selectedNumber, setSelectedNumber] = useState();
+  const [buttonWidth, setButtonWidth] = useState(Dimensions.get('window').width / 3.5);
+
+  useEffect(()=>{
+    const updateLayout = () => {
+      setButtonWidth(Dimensions.get('window').width / 3.5);
+    }
+    //se puede agregar listeners a Dimensions
+    Dimensions.addEventListener('change', updateLayout);
+    //limpiamos el listener cada vez que el componente se desmonte
+    return () => {
+      Dimensions.removeEventListener('change', updateLayout);
+    }
+  });
 
   //En RN , el argumento que nos envia un listener como onChangeText es el texto directamente No un event!!
   const numberInputHandler = inputText => {
@@ -74,49 +88,57 @@ const StartGameScreen = props => {
   }
 
   return (
-    <TouchableWithoutFeedback
-      onPress={
-        //Keyboard es una API de RN que nos permite interactuar con el teclado nativo
-        dismissKeyboard
-      }
-    >
-      {/* hay un problema con dismiss() no funca bien para View y ahora tampoco para ScrollView */}
-      {/* <ScrollView scrollEnabled={false}> */}
-      <View style={styles.screen}>
-        <Text style={styles.title}>Start a New Game Now!!!</Text>
-        <Card style={styles.inputContainer}>
-          <BodyText>Select a Number</BodyText>
-          <Input
-            style={styles.input}
-            blurOnSubmit
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="number-pad"
-            maxLength={2}
-            onChangeText={numberInputHandler}
-            value={enteredValue}
-          />
-          <View style={styles.buttonContainer}>
-            <View style={styles.button}>
-              <Button
-                title="Reset"
-                onPress={resetInputHandler}
-                color={Color.accent}
+    //Ojo que para que habilitemos la rotacion de nuestra App tenemos que
+    //ir a app.json y configurar:  "orientation": "default", en lugar de "portrait"
+    //KeyboardAvoidingView sirve para que el teclado no nos estorbe al suporponerse
+    //sobre los lugares de la pantalla que necesitamos acceder con el dedo
+    <ScrollView>
+      <KeyboardAvoidingView behavior="position" keyboardVerticalOffset={30}>
+        <TouchableWithoutFeedback
+          onPress={
+            //Keyboard es una API de RN que nos permite interactuar con el teclado nativo
+            dismissKeyboard
+          }
+        >
+          {/* hay un problema con dismiss() no funca bien para View y ahora tampoco para ScrollView */}
+          {/* <ScrollView scrollEnabled={false}> */}
+          <View style={styles.screen}>
+            <Text style={styles.title}>Start a New Game Now!!!</Text>
+            <Card style={styles.inputContainer}>
+              <BodyText>Select a Number</BodyText>
+              <Input
+                style={styles.input}
+                blurOnSubmit
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="number-pad"
+                maxLength={2}
+                onChangeText={numberInputHandler}
+                value={enteredValue}
               />
-            </View>
-            <View style={styles.button}>
-              <Button
-                title="Confirm"
-                onPress={confirmInputHandler}
-                color={Color.primary}
-              />
-            </View>
+              <View style={styles.buttonContainer}>
+                <View style={{width: buttonWidth}}>
+                  <Button
+                    title="Reset"
+                    onPress={resetInputHandler}
+                    color={Color.accent}
+                  />
+                </View>
+                <View style={{width: buttonWidth}}>
+                  <Button
+                    title="Confirm"
+                    onPress={confirmInputHandler}
+                    color={Color.primary}
+                  />
+                </View>
+              </View>
+            </Card>
+            {confirmedOutput}
           </View>
-        </Card>
-        {confirmedOutput}
-      </View>
-      {/* </ScrollView> */}
-    </TouchableWithoutFeedback>
+          {/* </ScrollView> */}
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
+    </ScrollView>
   );
 };
 
@@ -149,7 +171,12 @@ const styles = StyleSheet.create({
     //las dimensiones del device. En este caso obtenemos el ancho del window.
     //la otra opcion es screen , pero window funciona para IOS y Android!!
     //(screen considera la toolbar de Android en su dimension)
-    width: Dimensions.get('window').width / 3.5
+
+    //Este estilo se carga solo la primera vez que se renderiza el componente
+    //si hacemos rotar el equipo, el estilo se pierde porque depende de Dimension, esta Dimension 
+    //cambia a la nueva dimension de la pantalla al ser rotada!!
+    //controlaremos esto con el state
+    //width: Dimensions.get('window').width / 3.5
   },
   input: {
     //esto sería como una suerte de media query!!
