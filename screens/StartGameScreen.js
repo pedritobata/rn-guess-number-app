@@ -18,7 +18,10 @@ import NumberContainer from "../components/NumberContainer";
 import BodyText from "../components/BodyText";
 import MainButton from "../components/MainButton";
 
+
 const StartGameScreen = props => {
+
+
   const [enteredValue, setEnteredValue] = useState("");
   const [confirmed, setConfirmed] = useState(false);
   const [selectedNumber, setSelectedNumber] = useState();
