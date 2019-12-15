@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View , SafeAreaView} from 'react-native';
 import Header from './components/Header';
 import StartGameScreen from './screens/StartGameScreen';
 import GameScreen from './screens/GameScreen';
@@ -56,10 +56,14 @@ export default function App() {
   }
 
   return (
-    <View style={styles.screen}>
+    //SafeAreaView es un Componente de RN que nos sirve para que se ajuste la pantalla a
+    //las posibles intereferencias visuales con elementos del device, por ejemplo
+    //SafeAreaView agrega paddings para que un boton que está al final de una vista NO choque
+    //con el final del viewport, cosas así..
+    <SafeAreaView style={styles.screen}>
        <Header title='Guess a Number' />
        {content}
-    </View>
+    </SafeAreaView>
   );
 }
 

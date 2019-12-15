@@ -61,7 +61,7 @@ const GameScreen = props => {
 
   const { onGameOver, userChoice } = props;
 
-  console.log("Renderizado!!");
+  //console.log("Renderizado!!");
 
   //colocar este codigo como primera validacion despues de cada rerender
   //prueba que la logica funciona correctamente usando useEffect o esto
@@ -91,7 +91,7 @@ useEffect(()=>{
     //limpiamos los listeners para que no se acumulen.
     //El componente se está desmontando con cada rotación del device
     return () => {
-        console.log("Desmontado!!");
+       // console.log("Desmontado!!");
         Dimensions.removeEventListener('change', updateLayout);
     }
 });
